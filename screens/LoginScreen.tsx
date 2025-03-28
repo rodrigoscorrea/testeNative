@@ -13,13 +13,11 @@ export default function LoginScreen() {
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: "335591001896-h6g84fnppje3g36mucbuf5ehqq4d26fg.apps.googleusercontent.com",
     webClientId: "335591001896-citt1llo4974v224n4nkovmea5a2btb2.apps.googleusercontent.com",
-    
-    redirectUri: makeRedirectUri({
-      scheme: 'com.testcompany.testapp' // Use this exact scheme
-    }),
-    
+    /* redirectUri: makeRedirectUri({
+      scheme: 'testapp'
+    }), */
     scopes: ['profile', 'email']
-  }, {native: 'com.testcompany.testapp'});
+  });
 
   useEffect(() => {
     if (response?.type === "success") {
@@ -30,12 +28,12 @@ export default function LoginScreen() {
 
   async function fetchUserInfo(token:any) {
     try {
-      const response = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      const response = await fetch("https://www.googleapis.com/userinfo/v2/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const user = await response.json();
+      await AsyncStorage.setItem("@user", JSON.stringify(user));
       setUserInfo(user);
-      await AsyncStorage.setItem("user", JSON.stringify(user));
     } catch (error) {
       console.error("Error fetching user info:", error);
     }
