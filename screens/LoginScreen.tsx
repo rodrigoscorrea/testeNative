@@ -1,44 +1,50 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, StyleSheet } from "react-native";
-import {
-  GoogleSignin,
-  GoogleSigninButton
-} from '@react-native-google-signin/google-signin';
+import { View, Text, StyleSheet, Button } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import * as Google from "expo-auth-session/providers/google";
+import { useAuthRequest, makeRedirectUri } from "expo-auth-session";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-GoogleSignin.configure({
-  webClientId:"335591001896-citt1llo4974v224n4nkovmea5a2btb2.apps.googleusercontent.com",
-  scopes: ['https://www.googleapis.com/auth/drive.readonly'],
-  offlineAccess: true,
-});
-
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const [userInfo, setUserInfo] = useState<any>(null);
 
-  /* const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: "335591001896-citt1llo4974v224n4nkovmea5a2btb2.apps.googleusercontent.com", // Replace with your Google Web Client ID
+  const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: "335591001896-h6g84fnppje3g36mucbuf5ehqq4d26fg.apps.googleusercontent.com",
+    webClientId: "335591001896-citt1llo4974v224n4nkovmea5a2btb2.apps.googleusercontent.com",
+    
+    redirectUri: makeRedirectUri({
+      scheme: 'com.testcompany.testapp' // Use this exact scheme
+    }),
+    
     scopes: ['profile', 'email']
-}); */
+  }, {native: 'com.testcompany.testapp'});
 
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { authentication } = response;
+      fetchUserInfo(authentication?.accessToken);
+    }
+  }, [response]);
 
-  const signIn = async () => {
-    try{
-      await GoogleSignin.hasPlayServices();
-      const user = await GoogleSignin.signIn();
+  async function fetchUserInfo(token:any) {
+    try {
+      const response = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const user = await response.json();
       setUserInfo(user);
-    } catch (err) {
-      console.log(err)
-    };
-  };
+      await AsyncStorage.setItem("user", JSON.stringify(user));
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+    }
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login Page</Text>
-      <GoogleSigninButton
-        size={GoogleSigninButton.Size.Wide}
-        color={GoogleSigninButton.Color.Dark}
-        onPress={signIn}></GoogleSigninButton>
+      <Button title="Sign in with Google" disabled={!request} onPress={() => promptAsync()} />
       {userInfo && <Text>Welcome, {userInfo.name}</Text>}
     </View>
   );

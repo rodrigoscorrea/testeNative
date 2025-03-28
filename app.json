@@ -1,12 +1,13 @@
 {
   "expo": {
-    "name": "testApp",
-    "slug": "testApp",
+    "name": "testapp",
+    "slug": "testapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "com.testcompany.testapp",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
